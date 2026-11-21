@@ -17,16 +17,24 @@
 // Run it the way the grader does:
 //   mkdir -p out && MAKEFUN_BOT_DIR=. MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const BOT_DIR = process.env.MAKEFUN_BOT_DIR ?? '/bot';
 const OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
 mkdirSync(OUTPUT_DIR, { recursive: true });
+const source = join(BOT_DIR, 'VIDEO.json');
+const dest = join(OUTPUT_DIR, 'VIDEO.json');
 try {
-  copyFileSync(join(BOT_DIR, 'VIDEO.json'), join(OUTPUT_DIR, 'VIDEO.json'));
+  copyFileSync(source, dest);
 } catch (err) {
   console.error(`VIDEO.json could not be copied from ${BOT_DIR}: ${(err as Error).message}`);
+  process.exit(1);
+}
+// The gate reads exactly what lands in /output, so confirm the copy is
+// byte for byte the file this repository holds before reporting success.
+if (!readFileSync(source).equals(readFileSync(dest))) {
+  console.error(`VIDEO.json copied to ${OUTPUT_DIR} does not match ${source}`);
   process.exit(1);
 }
